@@ -2,7 +2,7 @@ using System;
 using System.Diagnostics;
 using System.Globalization;
 
-namespace Shure.Cwb.WebApi.Service.OwinHttpServer
+namespace WebSocketSharp.Owin
 {
 	internal class OwinLogger
 	{

@@ -6,7 +6,7 @@ using Microsoft.Owin.Hosting.ServerFactory;
 using Microsoft.Owin.Hosting.Services;
 using Owin;
 
-namespace Shure.Cwb.WebApi.Service.OwinHttpServer
+namespace WebSocketSharp.Owin
 {
 	public class OwinHttpServer : IDisposable
 	{

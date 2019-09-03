@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Net;
 using System.Security.Cryptography.X509Certificates;
 using System.Security.Principal;
 using System.Threading;
 using System.Threading.Tasks;
+using WebSocketSharp.Net;
 
-namespace Shure.Cwb.WebApi.Service.OwinHttpServer.RequestProcessing
+namespace WebSocketSharp.Owin.RequestProcessing
 {
 	internal partial class CallEnvironment
     {
@@ -64,7 +64,7 @@ namespace Shure.Cwb.WebApi.Service.OwinHttpServer.RequestProcessing
         private Func<Task> _LoadClientCert;
 //        private WebSocketAccept _WebSocketAccept;
         private Func<string, long, long?, CancellationToken, Task> _SendFileAsync;
-//        private HttpListenerContext _RequestContext;
+        private HttpListenerContext _RequestContext;
 //        private Microsoft.Net.Http.Server.WebListener _Listener;
 //        private OwinHttpServerFactory _OwinWebListener;
 
@@ -600,18 +600,18 @@ namespace Shure.Cwb.WebApi.Service.OwinHttpServer.RequestProcessing
             }
         }
 
-//        internal RequestContext RequestContext
-//        {
-//            get
-//            {
-//                return _RequestContext;
-//            }
-//            set
-//            {
-//                _flag1 |= 0x1u;
-//                _RequestContext = value;
-//            }
-//        }
+        internal HttpListenerContext RequestContext
+        {
+            get
+            {
+                return _RequestContext;
+            }
+            set
+            {
+                _flag1 |= 0x1u;
+                _RequestContext = value;
+            }
+        }
 //
 //        internal Microsoft.Net.Http.Server.WebListener Listener
 //        {
@@ -813,7 +813,7 @@ namespace Shure.Cwb.WebApi.Service.OwinHttpServer.RequestProcessing
 //                    }
 //                   break;
                 case 40:
-                    if (((_flag1 & 0x1u) != 0) && string.Equals(key, "Microsoft.Net.Http.Server.RequestContext", StringComparison.Ordinal))
+                    if (((_flag1 & 0x1u) != 0) && string.Equals(key, "WebSocketSharp.Net.HttpListenerContext", StringComparison.Ordinal))
                     {
                         return true;
                     }
@@ -1043,13 +1043,13 @@ namespace Shure.Cwb.WebApi.Service.OwinHttpServer.RequestProcessing
 //                        return true;
 //                    }
 //                   break;
-//                case 40:
-//                    if (((_flag1 & 0x1u) != 0) && string.Equals(key, "Microsoft.Net.Http.Server.RequestContext", StringComparison.Ordinal))
-//                    {
-//                        value = RequestContext;
-//                        return true;
-//                    }
-//                   break;
+                case 40:
+                    if (((_flag1 & 0x1u) != 0) && string.Equals(key, "WebSocketSharp.Net.HttpListenerContext", StringComparison.Ordinal))
+                    {
+                        value = RequestContext;
+                        return true;
+                    }
+                   break;
 //                case 47:
 //                    if (((_flag1 & 0x4u) != 0) && string.Equals(key, "Microsoft.Owin.Host.WebListener.OwinWebListener", StringComparison.Ordinal))
 //                    {
@@ -1259,13 +1259,13 @@ namespace Shure.Cwb.WebApi.Service.OwinHttpServer.RequestProcessing
 //                        return true;
 //                    }
 //                   break;
-//                case 40:
-//                    if (string.Equals(key, "Microsoft.Net.Http.Server.RequestContext", StringComparison.Ordinal))
-//                    {
-//                        RequestContext = (RequestContext)value;
-//                        return true;
-//                    }
-//                   break;
+                case 40:
+                    if (string.Equals(key, "WebSocketSharp.Net.HttpListenerContext", StringComparison.Ordinal))
+                    {
+                        RequestContext = (WebSocketSharp.Net.HttpListenerContext)value;
+                        return true;
+                    }
+                   break;
 //                case 47:
 //                    if (string.Equals(key, "Microsoft.Owin.Host.WebListener.OwinWebListener", StringComparison.Ordinal))
 //                    {
@@ -1548,15 +1548,15 @@ namespace Shure.Cwb.WebApi.Service.OwinHttpServer.RequestProcessing
 //                        return true;
 //                    }
 //                   break;
-//                case 40:
-//                    if (((_flag1 & 0x1u) != 0) && string.Equals(key, "Microsoft.Net.Http.Server.RequestContext", StringComparison.Ordinal))
-//                    {
-//                        _flag1 &= ~0x1u;
-//                        _RequestContext = default(RequestContext);
-//                        // This can return true incorrectly for values that delayed initialization may determine are not actually present.
-//                        return true;
-//                    }
-//                   break;
+                case 40:
+                    if (((_flag1 & 0x1u) != 0) && string.Equals(key, "WebSocketSharp.Net.HttpListenerContext", StringComparison.Ordinal))
+                    {
+                        _flag1 &= ~0x1u;
+                        _RequestContext = default(WebSocketSharp.Net.HttpListenerContext);
+                        // This can return true incorrectly for values that delayed initialization may determine are not actually present.
+                        return true;
+                    }
+                   break;
 //                case 47:
 //                    if (((_flag1 & 0x4u) != 0) && string.Equals(key, "Microsoft.Owin.Host.WebListener.OwinWebListener", StringComparison.Ordinal))
 //                    {
@@ -1711,7 +1711,7 @@ namespace Shure.Cwb.WebApi.Service.OwinHttpServer.RequestProcessing
             }
             if (((_flag1 & 0x1u) != 0))
             {
-                yield return "Microsoft.Net.Http.Server.RequestContext";
+                yield return "WebSocketSharp.Net.HttpListenerContext";
             }
             if (((_flag1 & 0x2u) != 0))
             {
@@ -2015,10 +2015,10 @@ namespace Shure.Cwb.WebApi.Service.OwinHttpServer.RequestProcessing
             {
                 yield return new KeyValuePair<string, object>("sendfile.SendAsync", SendFileAsync);
             }
-//            if (((_flag1 & 0x1u) != 0))
-//            {
-//                yield return new KeyValuePair<string, object>("Microsoft.Net.Http.Server.RequestContext", RequestContext);
-//            }
+            if (((_flag1 & 0x1u) != 0))
+            {
+                yield return new KeyValuePair<string, object>("WebSocketSharp.Net.HttpListenerContext", RequestContext);
+            }
 //            if (((_flag1 & 0x2u) != 0))
 //            {
 //                yield return new KeyValuePair<string, object>("Microsoft.Net.Http.Server.WebListener", Listener);

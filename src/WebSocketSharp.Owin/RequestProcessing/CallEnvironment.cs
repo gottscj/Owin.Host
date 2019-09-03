@@ -1,13 +1,9 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Security.Cryptography.X509Certificates;
-using System.Security.Principal;
-using System.Threading;
 
-namespace Shure.Cwb.WebApi.Service.OwinHttpServer.RequestProcessing
+namespace WebSocketSharp.Owin.RequestProcessing
 {
 
 	internal sealed partial class CallEnvironment : IDictionary<string, object>

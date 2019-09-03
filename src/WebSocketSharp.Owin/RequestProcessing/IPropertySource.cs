@@ -6,7 +6,7 @@ using System.Security.Principal;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Shure.Cwb.WebApi.Service.OwinHttpServer.RequestProcessing
+namespace WebSocketSharp.Owin.RequestProcessing
 {
 	using WebSocketAccept =
 		Action<IDictionary<string, object>, // WebSocket Accept parameters

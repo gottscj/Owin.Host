@@ -5,13 +5,13 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading.Tasks;
-using WebSocketSharp;
 using WebSocketSharp.Net;
+using WebSocketSharp.Owin.RequestProcessing;
 using WebSocketSharp.Server;
 using LoggerFactoryFunc = System.Func<string, System.Func<System.Diagnostics.TraceEventType, int, object, System.Exception, System.Func<object, System.Exception, string>, bool>>;
 using GeContextFunc = System.Func<WebSocketSharp.Server.HttpRequestEventArgs, WebSocketSharp.Net.HttpListenerContext>;
 
-namespace Shure.Cwb.WebApi.Service.OwinHttpServer
+namespace WebSocketSharp.Owin
 {
 	internal class OwinHttpServerFactory
 	{
@@ -20,10 +20,7 @@ namespace Shure.Cwb.WebApi.Service.OwinHttpServer
 		private HttpServer _httpServer;
 		private OwinLogger _logger;
 		private GeContextFunc _getContextFunc;
-		public OwinHttpServerFactory()
-		{
-			
-		}
+		
 		/// <summary>
 		/// Called by <see cref="Microsoft.Owin.Hosting.ServerFactory.ServerFactoryAdapter"/>
 		/// which starts the server
@@ -39,19 +36,8 @@ namespace Shure.Cwb.WebApi.Service.OwinHttpServer
 
 			var loggerFactory = (LoggerFactoryFunc)properties["server.LoggerFactory"];
 			_logger = new OwinLogger(loggerFactory, GetType());
-			
-			var instExp = Expression.Parameter(typeof(HttpRequestEventArgs));
-			var fieldInfo =
-				typeof(HttpRequestEventArgs).GetField("_context", BindingFlags.NonPublic | BindingFlags.Instance);
-			
-			if (fieldInfo == null)
-			{
-				throw new InvalidOperationException($"Expected private field '_context' to be present in WebSocketSharp.Server.HttpRequestEventArgs\r\n" +
-				                                    $"Go to https://github.com/sta/websocket-sharp and check field name");
-			}
-			
-			var fieldExp = Expression.Field(instExp, fieldInfo);
-			_getContextFunc = Expression.Lambda<Func<HttpRequestEventArgs, HttpListenerContext>>(fieldExp, instExp).Compile();
+
+			_getContextFunc = CreateGetContextMethod();
 			
 			var addresses = (IList<IDictionary<string, object>>)properties["host.Addresses"];
 			if (addresses.Count != 1)
@@ -91,18 +77,30 @@ namespace Shure.Cwb.WebApi.Service.OwinHttpServer
 			return new Disposable(_httpServer);
 		}
 
+		private static GeContextFunc CreateGetContextMethod()
+		{
+			var instExp = Expression.Parameter(typeof(HttpRequestEventArgs));
+			var fieldInfo =
+				typeof(HttpRequestEventArgs).GetField("_context", BindingFlags.NonPublic | BindingFlags.Instance);
+			
+			if (fieldInfo == null)
+			{
+				throw new InvalidOperationException($"Expected private field '_context' to be present in WebSocketSharp.Server.HttpRequestEventArgs\r\n" +
+				                                    $"Go to https://github.com/sta/websocket-sharp and check field name");
+			}
+			
+			var fieldExp = Expression.Field(instExp, fieldInfo);
+			return Expression.Lambda<Func<HttpRequestEventArgs, HttpListenerContext>>(fieldExp, instExp).Compile();
+		}
 		
 		private async void ProcessRequestAsync(object sender, HttpRequestEventArgs e)
 		{
-			HttpListenerContext context = null;
 			try
 			{
-
-				context = _getContextFunc(e);
-				
-				var owinContext = new OwinHttpListenerContext();
-				await _app.Invoke(env);
-				
+				var context = _getContextFunc(e);
+				var baseUri = e.Request.Url.GetLeftPart(System.UriPartial.Authority);
+				var owinContext = new OwinHttpListenerContext(context, baseUri, e.Request.Url.LocalPath, e.Request.Url.Query);
+				await _app.Invoke(owinContext.Environment);
 			}
 			catch (Exception exception)
 			{
@@ -119,11 +117,6 @@ namespace Shure.Cwb.WebApi.Service.OwinHttpServer
 			// Break into the debugger in case the message pump fails.
 			System.Diagnostics.Debugger.Break();
 #endif
-		}
-
-		public Task Next(IDictionary<string, object> env)
-		{
-			return 
 		}
 
 		private class Disposable : IDisposable
