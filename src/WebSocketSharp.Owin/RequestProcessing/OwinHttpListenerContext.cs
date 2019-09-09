@@ -3,7 +3,7 @@ using System.IO;
 using System.Security.Cryptography.X509Certificates;
 using System.Security.Principal;
 using System.Threading;
-using WebSocketSharp.Net;
+using WebSocketSharp.Owin.WebSocketSharp.Net;
 
 namespace WebSocketSharp.Owin.RequestProcessing
 {
@@ -18,6 +18,7 @@ namespace WebSocketSharp.Owin.RequestProcessing
         internal OwinHttpListenerContext(HttpListenerContext context, string basePath, string path, string query)
         {
             _environment = new CallEnvironment(this);
+            
             _owinRequest = new OwinHttpListenerRequest(context, basePath, path, query, _environment);
             _owinResponse = new OwinHttpListenerResponse(context, _environment);
 

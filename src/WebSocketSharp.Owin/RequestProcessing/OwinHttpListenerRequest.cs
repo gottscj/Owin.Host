@@ -2,11 +2,9 @@ using System;
 using System.Diagnostics.Contracts;
 using System.Globalization;
 using System.IO;
-using System.Net;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
-using HttpListenerContext = WebSocketSharp.Net.HttpListenerContext;
-using HttpListenerRequest = WebSocketSharp.Net.HttpListenerRequest;
+using WebSocketSharp.Owin.WebSocketSharp.Net;
 
 namespace WebSocketSharp.Owin.RequestProcessing
 {

@@ -1,6 +1,6 @@
 using System;
 using System.IO;
-using WebSocketSharp.Net;
+using WebSocketSharp.Owin.WebSocketSharp.Net;
 
 namespace WebSocketSharp.Owin.RequestProcessing
 {

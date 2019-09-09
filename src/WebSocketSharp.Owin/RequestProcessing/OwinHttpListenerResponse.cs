@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
 using System.Threading;
-using WebSocketSharp.Net;
+using WebSocketSharp.Owin.WebSocketSharp.Net;
 
 namespace WebSocketSharp.Owin.RequestProcessing
 {

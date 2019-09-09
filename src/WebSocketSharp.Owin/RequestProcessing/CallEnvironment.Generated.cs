@@ -5,7 +5,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Security.Principal;
 using System.Threading;
 using System.Threading.Tasks;
-using WebSocketSharp.Net;
+using WebSocketSharp.Owin.WebSocketSharp.Net;
 
 namespace WebSocketSharp.Owin.RequestProcessing
 {

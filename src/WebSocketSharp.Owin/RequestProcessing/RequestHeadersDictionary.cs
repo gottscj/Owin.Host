@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Specialized;
 using System.Globalization;
-using WebSocketSharp.Net;
+using WebSocketSharp.Owin.WebSocketSharp.Net;
 
 namespace WebSocketSharp.Owin.RequestProcessing
 {

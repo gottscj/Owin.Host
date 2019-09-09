@@ -2,7 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using WebSocketSharp.Net;
+using WebSocketSharp.Owin.WebSocketSharp;
+using WebSocketSharp.Owin.WebSocketSharp.Net;
 
 namespace WebSocketSharp.Owin.RequestProcessing
 {
@@ -32,7 +33,7 @@ namespace WebSocketSharp.Owin.RequestProcessing
             {
                 if (HasContentLength)
                 {
-                    return base.Keys.Concat(new[] { Constants.ContentLengthHeader }).ToList();
+                    return Ext.ToList(base.Keys.Concat(new[] { Constants.ContentLengthHeader }));
                 }
 
                 return base.Keys;

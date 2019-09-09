@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
+using WebSocketSharp.Owin.WebSocketSharp;
 
 namespace WebSocketSharp.Owin.RequestProcessing
 {
@@ -18,7 +19,7 @@ namespace WebSocketSharp.Owin.RequestProcessing
 
         public virtual ICollection<string[]> Values
         {
-            get { return this.Select(pair => pair.Value).ToList(); }
+            get { return Ext.ToList(this.Select(pair => pair.Value)); }
         }
 
         public int Count => Keys.Count();
