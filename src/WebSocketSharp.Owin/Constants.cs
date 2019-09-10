@@ -53,6 +53,7 @@ namespace WebSocketSharp.Owin
         internal const string SecWebSocketProtocol = "Sec-WebSocket-Protocol";
         internal const string SecWebSocketVersion = "Sec-WebSocket-Version";
 
+        internal const string HttpServerKey = "WebSocketSharp.HttpServer";
         internal const int ErrorConnectionNoLongerValid = 1229;
     }
 }

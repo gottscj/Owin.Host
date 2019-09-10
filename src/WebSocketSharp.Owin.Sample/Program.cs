@@ -14,6 +14,7 @@ namespace WebSocketSharp.Owin.Sample
                 config.MapHttpAttributeRoutes();
 
                 app.UseWebApi(config);
+                app.AddWebSocketHandler<ChatWebSocketHandler>("/chat");
             }))
             {
                 Console.WriteLine("Press any key to exit...");

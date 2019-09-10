@@ -12,36 +12,30 @@ using LoggerFactoryFunc = System.Func<string, System.Func<System.Diagnostics.Tra
 
 namespace WebSocketSharp.Owin
 {
+	using AppFunc = Func<IDictionary<string, object>, Task>;
 	internal class OwinHttpServerFactory
 	{
-		private Func<IDictionary<string, object>, Task> _app;
-		private IDictionary<string, object> _properties;
-		private HttpServer _httpServer;
 		private string _basePath;
-		private OwinLogger _logger;
 		
-		/// <summary>
-		/// Called by <see cref="Microsoft.Owin.Hosting.ServerFactory.ServerFactoryAdapter"/>
-		/// which starts the server
-		/// </summary>
-		/// <param name="app"></param>
-		/// <param name="properties"></param>
-		/// <returns></returns>
-		public IDisposable Create(Func<IDictionary<string, object>, Task> app, IDictionary<string, object> properties)
+		public void Initialize(IDictionary<string, object> properties)
 		{
+			if (properties == null)
+			{
+				throw new ArgumentNullException(nameof(properties));
+			}
+
+			properties[Constants.VersionKey] = Constants.OwinVersion;
+
+			var capabilities = properties.Get<IDictionary<string, object>>(Constants.ServerCapabilitiesKey)
+				?? new Dictionary<string, object>();
+			properties[Constants.ServerCapabilitiesKey] = capabilities;
 			
-			_app = app;
-			_properties = properties;
-
-			var loggerFactory = (LoggerFactoryFunc)properties["server.LoggerFactory"];
-			_logger = new OwinLogger(loggerFactory, GetType());
-
-			var addresses = (IList<IDictionary<string, object>>)properties["host.Addresses"];
+			var addresses = properties.Get<IList<IDictionary<string, object>>>("host.Addresses");
+			
 			if (addresses.Count != 1)
 			{
 				throw new InvalidOperationException($"'{nameof(OwinHost)}' only supports one url");
 			}
-
 			var address = addresses.Single();
 			// build url from parts
 			var scheme = address.ContainsKey("scheme") ? address["scheme"].ToString() : Uri.UriSchemeHttp;
@@ -62,31 +56,48 @@ namespace WebSocketSharp.Owin
 			}
 
 			_basePath = path;
+			
 			// add a server for each url
 			var url = scheme + "://" + host + port + path;
+
+			var httpServer = new HttpServer(url);
+			properties[Constants.HttpServerKey] = httpServer;
+		}
+		
+		/// <summary>
+		/// Called by <see cref="Microsoft.Owin.Hosting.ServerFactory.ServerFactoryAdapter"/>
+		/// which starts the server
+		/// </summary>
+		/// <param name="app"></param>
+		/// <param name="properties"></param>
+		/// <returns></returns>
+		public IDisposable Create(AppFunc app, IDictionary<string, object> properties)
+		{
+			var loggerFactory = properties.Get<LoggerFactoryFunc>(Constants.ServerLoggerFactoryKey);
+			var logger = new OwinLogger(loggerFactory, GetType());
+
+			var httpServer = properties.Get<HttpServer>(Constants.HttpServerKey);
+			httpServer.OnRequest += (s, e) => ProcessRequest(httpServer, e.Context, app, logger);
+			httpServer.Start();
 			
-			_httpServer = new HttpServer(url);
-			_httpServer.OnRequest += ProcessRequest;
-			_httpServer.Start();
-			
-			return new Disposable(_httpServer);
+			return new Disposable(httpServer);
 		}
 
-		private void ProcessRequest(object sender, HttpRequestEventArgs e)
+		private void ProcessRequest(HttpServer httpServer, HttpListenerContext context, AppFunc app, OwinLogger logger)
 		{
 			try
 			{
-				var context = e.Context;
 				GetPathAndQuery(context.Request, out var pathBase, out var path, out var query);
 				var owinContext = new OwinHttpListenerContext(context, pathBase, path, query);
-				_app.Invoke(owinContext.Environment).GetAwaiter().GetResult();
+				owinContext.Environment.HttpServer = httpServer;
+				app.Invoke(owinContext.Environment).GetAwaiter().GetResult();
 			}
 			catch (Exception exception)
 			{
-				HandleRequestError(exception);
-				e.Response.StatusCode = 500; // internal server error
-				e.Response.ContentEncoding = Encoding.UTF8;
-				e.Response.ContentType = "application/json";
+				logger.Exception("Unexpected exception.", exception);
+				context.Response.StatusCode = 500; // internal server error
+				context.Response.ContentEncoding = Encoding.UTF8;
+				context.Response.ContentType = "application/json";
 //				e.Response.AppendHeader("Content-Type", "application/json");
 				var errorObject = new Dictionary<string, object>
 				{
@@ -95,7 +106,7 @@ namespace WebSocketSharp.Owin
 					["Details"] = exception.ToString()
 				};
 				var buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(errorObject));
-				e.Response.WriteContent(buffer);
+				context.Response.WriteContent(buffer);
 			}
 		}
 
@@ -149,15 +160,6 @@ namespace WebSocketSharp.Owin
 				pathBase = cookedPath;
 				path = string.Empty;
 			}
-		}
-
-		private void HandleRequestError(Exception exception)
-		{
-			// StartNextRequestAsync should handle it's own exceptions.
-			_logger.Exception("Unexpected exception.", exception);
-			Console.ForegroundColor = ConsoleColor.Red;
-			Console.WriteLine("Un-expected exception path: " + exception.ToString());
-			Console.ResetColor();
 		}
 
 		private class Disposable : IDisposable

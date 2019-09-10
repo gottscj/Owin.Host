@@ -42,7 +42,7 @@ namespace WebSocketSharp.Owin.WebSocketSharp.Server
   /// <remarks>
   /// This class is an abstract class.
   /// </remarks>
-  public abstract class WebSocketBehavior : IWebSocketSession
+  public abstract class WebSocketHandler : IWebSocketSession
   {
     #region Private Fields
 
@@ -62,9 +62,9 @@ namespace WebSocketSharp.Owin.WebSocketSharp.Server
     #region Protected Constructors
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="WebSocketBehavior"/> class.
+    /// Initializes a new instance of the <see cref="WebSocketHandler"/> class.
     /// </summary>
-    protected WebSocketBehavior ()
+    protected WebSocketHandler ()
     {
       _startTime = DateTime.MaxValue;
     }

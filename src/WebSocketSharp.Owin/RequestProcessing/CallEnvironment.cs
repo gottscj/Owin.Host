@@ -10,10 +10,10 @@ namespace WebSocketSharp.Owin.RequestProcessing
 	{
 		private static readonly IDictionary<string, object> WeakNilEnvironment = new Dictionary<string, object>();
 
-		private readonly CallEnvironment.IPropertySource _propertySource;
+		private readonly IPropertySource _propertySource;
 		private IDictionary<string, object> _extra = WeakNilEnvironment;
 
-		internal CallEnvironment(CallEnvironment.IPropertySource propertySource)
+		internal CallEnvironment(IPropertySource propertySource)
 		{
 			_propertySource = propertySource;
 		}

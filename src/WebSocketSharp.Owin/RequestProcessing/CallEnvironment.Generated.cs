@@ -65,7 +65,7 @@ namespace WebSocketSharp.Owin.RequestProcessing
 //        private WebSocketAccept _WebSocketAccept;
         private Func<string, long, long?, CancellationToken, Task> _SendFileAsync;
         private HttpListenerContext _RequestContext;
-//        private Microsoft.Net.Http.Server.WebListener _Listener;
+        private WebSocketSharp.Server.HttpServer _HttpServer;
 //        private OwinHttpServerFactory _OwinWebListener;
 
         bool InitPropertyClientCert()
@@ -612,32 +612,19 @@ namespace WebSocketSharp.Owin.RequestProcessing
                 _RequestContext = value;
             }
         }
-//
-//        internal Microsoft.Net.Http.Server.WebListener Listener
-//        {
-//            get
-//            {
-//                return _Listener;
-//            }
-//            set
-//            {
-//                _flag1 |= 0x2u;
-//                _Listener = value;
-//            }
-//        }
-//
-//        internal OwinWebListener OwinWebListener
-//        {
-//            get
-//            {
-//                return _OwinWebListener;
-//            }
-//            set
-//            {
-//                _flag1 |= 0x4u;
-//                _OwinWebListener = value;
-//            }
-//        }
+
+        internal WebSocketSharp.Server.HttpServer HttpServer
+        {
+            get
+            {
+                return _HttpServer;
+            }
+            set
+            {
+                _flag1 |= 0x2u;
+                _HttpServer = value;
+            }
+        }
 
         private bool PropertiesContainsKey(string key)
         {
@@ -806,13 +793,13 @@ namespace WebSocketSharp.Owin.RequestProcessing
                         }
                     }
                    break;
-//                case 37:
-//                    if (((_flag1 & 0x2u) != 0) && string.Equals(key, "Microsoft.Net.Http.Server.WebListener", StringComparison.Ordinal))
-//                    {
-//                        return true;
-//                    }
-//                   break;
-                case 40:
+                case 32:
+                    if (((_flag1 & 0x2u) != 0) && string.Equals(key, "WebSocketSharp.Server.HttpServer", StringComparison.Ordinal))
+                    {
+                        return true;
+                    }
+                   break;
+                case 38:
                     if (((_flag1 & 0x1u) != 0) && string.Equals(key, "WebSocketSharp.Net.HttpListenerContext", StringComparison.Ordinal))
                     {
                         return true;
@@ -1036,14 +1023,14 @@ namespace WebSocketSharp.Owin.RequestProcessing
                         return true;
                     }
                    break;
-//                case 37:
-//                    if (((_flag1 & 0x2u) != 0) && string.Equals(key, "Microsoft.Net.Http.Server.WebListener", StringComparison.Ordinal))
-//                    {
-//                        value = Listener;
-//                        return true;
-//                    }
-//                   break;
-                case 40:
+                case 32:
+                    if (((_flag1 & 0x2u) != 0) && string.Equals(key, "WebSocketSharp.Server.HttpServer", StringComparison.Ordinal))
+                    {
+                        value = HttpServer;
+                        return true;
+                    }
+                   break;
+                case 38:
                     if (((_flag1 & 0x1u) != 0) && string.Equals(key, "WebSocketSharp.Net.HttpListenerContext", StringComparison.Ordinal))
                     {
                         value = RequestContext;
@@ -1252,14 +1239,14 @@ namespace WebSocketSharp.Owin.RequestProcessing
                         return true;
                     }
                    break;
-//                case 37:
-//                    if (string.Equals(key, "Microsoft.Net.Http.Server.WebListener", StringComparison.Ordinal))
-//                    {
-//                        Listener = (Microsoft.Net.Http.Server.WebListener)value;
-//                        return true;
-//                    }
-//                   break;
-                case 40:
+                case 32:
+                    if (string.Equals(key, "WebSocketSharp.Server.HttpServer", StringComparison.Ordinal))
+                    {
+                        HttpServer = (WebSocketSharp.Server.HttpServer)value;
+                        return true;
+                    }
+                   break;
+                case 38:
                     if (string.Equals(key, "WebSocketSharp.Net.HttpListenerContext", StringComparison.Ordinal))
                     {
                         RequestContext = (WebSocketSharp.Net.HttpListenerContext)value;
@@ -1539,16 +1526,16 @@ namespace WebSocketSharp.Owin.RequestProcessing
                         return true;
                     }
                    break;
-//                case 37:
-//                    if (((_flag1 & 0x2u) != 0) && string.Equals(key, "Microsoft.Net.Http.Server.WebListener", StringComparison.Ordinal))
-//                    {
-//                        _flag1 &= ~0x2u;
-//                        _Listener = default(Microsoft.Net.Http.Server.WebListener);
-//                        // This can return true incorrectly for values that delayed initialization may determine are not actually present.
-//                        return true;
-//                    }
-//                   break;
-                case 40:
+                case 32:
+                    if (((_flag1 & 0x2u) != 0) && string.Equals(key, "WebSocketSharp.Server.HttpServer", StringComparison.Ordinal))
+                    {
+                        _flag1 &= ~0x2u;
+                        _HttpServer = default(WebSocketSharp.Server.HttpServer);
+                        // This can return true incorrectly for values that delayed initialization may determine are not actually present.
+                        return true;
+                    }
+                   break;
+                case 38:
                     if (((_flag1 & 0x1u) != 0) && string.Equals(key, "WebSocketSharp.Net.HttpListenerContext", StringComparison.Ordinal))
                     {
                         _flag1 &= ~0x1u;
@@ -1715,12 +1702,12 @@ namespace WebSocketSharp.Owin.RequestProcessing
             }
             if (((_flag1 & 0x2u) != 0))
             {
-                yield return "Microsoft.Net.Http.Server.WebListener";
+                yield return "WebSocketSharp.Server.HttpServer";
             }
-            if (((_flag1 & 0x4u) != 0))
-            {
-                yield return "Microsoft.Owin.Host.WebListener.OwinWebListener";
-            }
+//            if (((_flag1 & 0x4u) != 0))
+//            {
+//                yield return "Microsoft.Owin.Host.WebListener.OwinWebListener";
+//            }
         }
 
         private IEnumerable<object> PropertiesValues()
@@ -2019,10 +2006,10 @@ namespace WebSocketSharp.Owin.RequestProcessing
             {
                 yield return new KeyValuePair<string, object>("WebSocketSharp.Net.HttpListenerContext", RequestContext);
             }
-//            if (((_flag1 & 0x2u) != 0))
-//            {
-//                yield return new KeyValuePair<string, object>("Microsoft.Net.Http.Server.WebListener", Listener);
-//            }
+            if (((_flag1 & 0x2u) != 0))
+            {
+                yield return new KeyValuePair<string, object>("WebSocketSharp.Server.HttpServer", HttpServer);
+            }
 //            if (((_flag1 & 0x4u) != 0))
 //            {
 //                yield return new KeyValuePair<string, object>("Microsoft.Owin.Host.WebListener.OwinWebListener", OwinWebListener);

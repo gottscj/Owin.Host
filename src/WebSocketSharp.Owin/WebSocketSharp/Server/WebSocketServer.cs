@@ -1070,7 +1070,7 @@ namespace WebSocketSharp.Owin.WebSocketSharp.Server
     ///   The type of the behavior for the service.
     ///   </para>
     ///   <para>
-    ///   It must inherit the <see cref="WebSocketBehavior"/> class.
+    ///   It must inherit the <see cref="WebSocketHandler"/> class.
     ///   </para>
     /// </typeparam>
     /// <exception cref="ArgumentNullException">
@@ -1112,7 +1112,7 @@ namespace WebSocketSharp.Owin.WebSocketSharp.Server
     public void AddWebSocketService<TBehavior> (
       string path, Func<TBehavior> creator
     )
-      where TBehavior : WebSocketBehavior
+      where TBehavior : WebSocketHandler
     {
       if (path == null)
         throw new ArgumentNullException ("path");
@@ -1151,7 +1151,7 @@ namespace WebSocketSharp.Owin.WebSocketSharp.Server
     ///   The type of the behavior for the service.
     ///   </para>
     ///   <para>
-    ///   It must inherit the <see cref="WebSocketBehavior"/> class.
+    ///   It must inherit the <see cref="WebSocketHandler"/> class.
     ///   </para>
     ///   <para>
     ///   And also, it must have a public parameterless constructor.
@@ -1185,7 +1185,7 @@ namespace WebSocketSharp.Owin.WebSocketSharp.Server
     ///   </para>
     /// </exception>
     public void AddWebSocketService<TBehaviorWithNew> (string path)
-      where TBehaviorWithNew : WebSocketBehavior, new ()
+      where TBehaviorWithNew : WebSocketHandler, new ()
     {
       _services.AddService<TBehaviorWithNew> (path, null);
     }
@@ -1218,7 +1218,7 @@ namespace WebSocketSharp.Owin.WebSocketSharp.Server
     ///   The type of the behavior for the service.
     ///   </para>
     ///   <para>
-    ///   It must inherit the <see cref="WebSocketBehavior"/> class.
+    ///   It must inherit the <see cref="WebSocketHandler"/> class.
     ///   </para>
     ///   <para>
     ///   And also, it must have a public parameterless constructor.
@@ -1254,7 +1254,7 @@ namespace WebSocketSharp.Owin.WebSocketSharp.Server
     public void AddWebSocketService<TBehaviorWithNew> (
       string path, Action<TBehaviorWithNew> initializer
     )
-      where TBehaviorWithNew : WebSocketBehavior, new ()
+      where TBehaviorWithNew : WebSocketHandler, new ()
     {
       _services.AddService<TBehaviorWithNew> (path, initializer);
     }

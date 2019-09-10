@@ -405,7 +405,7 @@ namespace WebSocketSharp.Owin.WebSocketSharp.Server
     #region Internal Methods
 
     internal void Add<TBehavior> (string path, Func<TBehavior> creator)
-      where TBehavior : WebSocketBehavior
+      where TBehavior : WebSocketHandler
     {
       path = path.TrimSlashFromEnd ();
 
@@ -495,7 +495,7 @@ namespace WebSocketSharp.Owin.WebSocketSharp.Server
     ///   The type of the behavior for the service.
     ///   </para>
     ///   <para>
-    ///   It must inherit the <see cref="WebSocketBehavior"/> class.
+    ///   It must inherit the <see cref="WebSocketHandler"/> class.
     ///   </para>
     ///   <para>
     ///   And also, it must have a public parameterless constructor.
@@ -531,7 +531,7 @@ namespace WebSocketSharp.Owin.WebSocketSharp.Server
     public void AddService<TBehavior> (
       string path, Action<TBehavior> initializer
     )
-      where TBehavior : WebSocketBehavior, new ()
+      where TBehavior : WebSocketHandler, new ()
     {
       if (path == null)
         throw new ArgumentNullException ("path");

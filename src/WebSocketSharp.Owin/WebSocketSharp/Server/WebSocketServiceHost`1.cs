@@ -31,7 +31,7 @@ using System;
 namespace WebSocketSharp.Owin.WebSocketSharp.Server
 {
   internal class WebSocketServiceHost<TBehavior> : WebSocketServiceHost
-    where TBehavior : WebSocketBehavior
+    where TBehavior : WebSocketHandler
   {
     #region Private Fields
 
@@ -92,7 +92,7 @@ namespace WebSocketSharp.Owin.WebSocketSharp.Server
 
     #region Protected Methods
 
-    protected override WebSocketBehavior CreateSession ()
+    protected override WebSocketHandler CreateSession ()
     {
       return _creator ();
     }

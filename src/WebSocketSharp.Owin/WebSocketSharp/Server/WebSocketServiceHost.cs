@@ -214,10 +214,10 @@ namespace WebSocketSharp.Owin.WebSocketSharp.Server
     /// Creates a new session for the service.
     /// </summary>
     /// <returns>
-    /// A <see cref="WebSocketBehavior"/> instance that represents
+    /// A <see cref="WebSocketHandler"/> instance that represents
     /// the new session.
     /// </returns>
-    protected abstract WebSocketBehavior CreateSession ();
+    protected abstract WebSocketHandler CreateSession ();
 
     #endregion
   }
