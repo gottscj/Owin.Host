@@ -176,6 +176,38 @@ namespace WebSocketSharp.Owin.WebSocketSharp.Server
       init (host, addr, uri.Port, uri.Scheme == "https");
     }
 
+    public HttpServer(string scheme, string host, string port, string path)
+    {
+	    _hostname = host;
+	    
+	    _port = int.Parse(port);
+	    _secure = scheme.Equals("https", StringComparison.Ordinal);
+		
+	    _docRootPath = "./Public";
+	    var url = scheme + "://" + host + ":" + port + path;
+	    var uri = url.ToUri();
+	    if (uri != null)
+	    {
+		    _hostname = uri.GetDnsSafeHost(true);
+		    _address = _hostname.ToIPAddress();
+	    }
+	    else if(System.Net.IPAddress.TryParse(host, out var ipAddress))
+	    {
+		    _address = ipAddress;
+	    }
+	    else if (host.Equals("+", StringComparison.Ordinal) || host.Equals("*", StringComparison.Ordinal))
+	    {
+		    _address = System.Net.IPAddress.Any;
+	    }
+	    
+	    
+	    _listener = new HttpListener();
+	    _listener.Prefixes.Add(url);
+	    _log = _listener.Log;
+	    _services = new WebSocketServiceManager (_log);
+	    _sync = new object ();
+    }
+
     /// <summary>
     /// Initializes a new instance of the <see cref="HttpServer"/> class with
     /// the specified <paramref name="port"/> and <paramref name="secure"/>.
