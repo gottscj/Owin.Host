@@ -12,7 +12,7 @@ namespace WebSocketSharp.Owin.Sample
     [RoutePrefix("api/users")]
     public class UsersController : ApiController
     {
-        [Route(""), HttpGet]
+        [Route(""), HttpGet, Authorize]
         public IHttpActionResult GetUsers()
         {
             return Ok(new List<User>

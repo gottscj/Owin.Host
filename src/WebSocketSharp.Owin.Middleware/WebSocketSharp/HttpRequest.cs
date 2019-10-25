@@ -53,7 +53,7 @@ namespace WebSocketSharp.Owin.WebSocketSharp
 
     #region Private Constructors
 
-    private HttpRequest (string method, string uri, Version version, NameValueCollection headers)
+    internal HttpRequest (string method, string uri, Version version, NameValueCollection headers)
       : base (version, headers)
     {
       _method = method;

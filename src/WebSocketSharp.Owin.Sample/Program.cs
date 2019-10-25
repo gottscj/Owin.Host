@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Web.Http;
+using Microsoft.Owin.Hosting;
 using Owin;
+using WebSocketSharp.Owin.Middleware;
 
 namespace WebSocketSharp.Owin.Sample
 {
@@ -8,12 +10,13 @@ namespace WebSocketSharp.Owin.Sample
     {
         public static void Main(string[] args)
         {
-            using (OwinHost.Start("http://localhost:5000", app =>
+            using (WebApp.Start("http://localhost:5000", app =>
             {
                 var config = new HttpConfiguration();
                 config.MapHttpAttributeRoutes();
 
                 app.UseWebApi(config);
+                app.UseWebSocketSharp();
                 app.AddWebSocketHandler<ChatWebSocketHandler>("/chat");
             }))
             {

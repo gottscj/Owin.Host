@@ -112,7 +112,8 @@ namespace WebSocketSharp.Owin.WebSocketSharp
     private int                            _retryCountForConnect;
     private bool                           _secure;
     private ClientSslConfiguration         _sslConfig;
-    private Stream                         _stream;
+    private Stream                         _outputStream;
+    private Stream                         _inputStream;
     private TcpClient                      _tcpClient;
     private Uri                            _uri;
     private const string                   _version = "13";
@@ -172,7 +173,8 @@ namespace WebSocketSharp.Owin.WebSocketSharp
       _logger = context.Log;
       _message = messages;
       _secure = context.IsSecureConnection;
-      _stream = context.Stream;
+      _outputStream = context.Stream;
+      _inputStream = context.Stream;
       _waitTime = TimeSpan.FromSeconds (1);
 
       init ();
@@ -188,7 +190,24 @@ namespace WebSocketSharp.Owin.WebSocketSharp
       _logger = context.Log;
       _message = messages;
       _secure = context.IsSecureConnection;
-      _stream = context.Stream;
+      _outputStream = context.Stream;
+      _inputStream = context.Stream;
+      _waitTime = TimeSpan.FromSeconds (1);
+
+      init ();
+    }
+    
+    internal WebSocket (SystemNetHttpListenerWebSocketContext context, string protocol)
+    {
+      _context = context;
+      _protocol = protocol;
+
+      _closeContext = context.Close;
+      _logger = new Logger();
+      _message = messages;
+      _secure = context.IsSecureConnection;
+      _outputStream = context.OutputStream;
+      _inputStream = context.InputStream;
       _waitTime = TimeSpan.FromSeconds (1);
 
       init ();
@@ -1800,11 +1819,11 @@ namespace WebSocketSharp.Owin.WebSocketSharp
     // As client
     private void releaseClientResources ()
     {
-      if (_stream != null) {
-        _stream.Dispose ();
-        _stream = null;
+      if (_outputStream != null) {
+        _outputStream.Dispose ();
+        _outputStream = null;
       }
-
+      
       if (_tcpClient != null) {
         _tcpClient.Close ();
         _tcpClient = null;
@@ -1848,7 +1867,8 @@ namespace WebSocketSharp.Owin.WebSocketSharp
 
       _closeContext ();
       _closeContext = null;
-      _stream = null;
+      _outputStream = null;
+      _inputStream = null;
       _context = null;
     }
 
@@ -1974,7 +1994,7 @@ namespace WebSocketSharp.Owin.WebSocketSharp
     private bool sendBytes (byte[] bytes)
     {
       try {
-        _stream.Write (bytes, 0, bytes.Length);
+        _outputStream.Write (bytes, 0, bytes.Length);
       }
       catch (Exception ex) {
         _logger.Error (ex.Message);
@@ -2052,7 +2072,7 @@ namespace WebSocketSharp.Owin.WebSocketSharp
     private HttpResponse sendHttpRequest (HttpRequest request, int millisecondsTimeout)
     {
       _logger.Debug ("A request to the server:\n" + request.ToString ());
-      var res = request.GetResponse (_stream, millisecondsTimeout);
+      var res = request.GetResponse (_outputStream, millisecondsTimeout);
       _logger.Debug ("A response to this request:\n" + res.ToString ());
 
       return res;
@@ -2091,7 +2111,8 @@ namespace WebSocketSharp.Owin.WebSocketSharp
           if (res.HasConnectionClose) {
             releaseClientResources ();
             _tcpClient = new TcpClient (_proxyUri.DnsSafeHost, _proxyUri.Port);
-            _stream = _tcpClient.GetStream ();
+            _outputStream = _tcpClient.GetStream ();
+            _inputStream = _outputStream;
           }
 
           var authRes = new AuthenticationResponse (authChal, _proxyCredentials, 0);
@@ -2113,12 +2134,14 @@ namespace WebSocketSharp.Owin.WebSocketSharp
     {
       if (_proxyUri != null) {
         _tcpClient = new TcpClient (_proxyUri.DnsSafeHost, _proxyUri.Port);
-        _stream = _tcpClient.GetStream ();
+        _outputStream = _tcpClient.GetStream ();
+        _inputStream = _outputStream;
         sendProxyConnectRequest ();
       }
       else {
         _tcpClient = new TcpClient (_uri.DnsSafeHost, _uri.Port);
-        _stream = _tcpClient.GetStream ();
+        _outputStream = _tcpClient.GetStream ();
+        _inputStream = _outputStream;
       }
 
       if (_secure) {
@@ -2130,7 +2153,7 @@ namespace WebSocketSharp.Owin.WebSocketSharp
 
         try {
           var sslStream = new SslStream (
-            _stream,
+            _outputStream,
             false,
             conf.ServerCertificateValidationCallback,
             conf.ClientCertificateSelectionCallback);
@@ -2141,7 +2164,8 @@ namespace WebSocketSharp.Owin.WebSocketSharp
             conf.EnabledSslProtocols,
             conf.CheckCertificateRevocation);
 
-          _stream = sslStream;
+          _outputStream = sslStream;
+          _inputStream = sslStream;
         }
         catch (Exception ex) {
           throw new WebSocketException (CloseStatusCode.TlsHandshakeFailure, ex);
@@ -2161,7 +2185,7 @@ namespace WebSocketSharp.Owin.WebSocketSharp
       receive =
         () =>
           WebSocketFrame.ReadFrameAsync (
-            _stream,
+            _inputStream,
             false,
             frame => {
               if (!processReceivedFrame (frame) || _readyState == WebSocketState.Closed) {
