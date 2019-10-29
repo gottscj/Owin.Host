@@ -2,8 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
+using System.Net;
 using System.Threading;
-using WebSocketSharp.Owin.WebSocketSharp.Net;
+using HttpListenerContext = SocketHttpListener.Net.HttpListenerContext;
+using HttpListenerResponse = SocketHttpListener.Net.HttpListenerResponse;
+using HttpStatusCode = SocketHttpListener.Net.HttpStatusCode;
 
 namespace WebSocketSharp.Owin.RequestProcessing
 {
@@ -76,6 +79,11 @@ namespace WebSocketSharp.Owin.RequestProcessing
             {
                 throw new ObjectDisposedException(GetType().FullName);
             }
+        }
+        
+        internal void CompleteResponse()
+        {
+            PrepareResponse(mayHaveBody: false);
         }
         
         // The request completed successfully.

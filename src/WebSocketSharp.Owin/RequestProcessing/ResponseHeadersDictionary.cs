@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using WebSocketSharp.Owin.WebSocketSharp;
-using WebSocketSharp.Owin.WebSocketSharp.Net;
+using SocketHttpListener;
+using SocketHttpListener.Net;
 
 namespace WebSocketSharp.Owin.RequestProcessing
 {

@@ -1,34 +1,29 @@
 using System;
 using Owin;
-using WebSocketSharp.Owin.WebSocketSharp.Server;
+using SocketHttpListener;
+using WebSocketSharp.Owin.Middleware;
 
 namespace WebSocketSharp.Owin
 {
     public static class AppBuilderExtensions
     {
-        public static void AddWebSocketHandler<T>(this IAppBuilder appBuilder, string path, Func<T> factory) 
+        public static IAppBuilder UseWebSockets(this IAppBuilder appBuilder)
+        {
+            appBuilder.Use(typeof(WebSocketSharpMiddleware), WebSocketManager.Instance);
+            return appBuilder;
+        }
+        public static IAppBuilder AddWebSocketHandler<T>(this IAppBuilder appBuilder, string path, Func<T> factory) 
             where T : WebSocketHandler
         {
-            if (!appBuilder.Properties.TryGetValue("WebSocketSharp.HttpServer", out var httpServer))
-            {
-                throw new InvalidOperationException("Could not get HttpServer for attaching websocket handler");
-            }
-
-            ((HttpServer) httpServer).AddWebSocketService<T>(path, factory);
+            WebSocketManager.Instance.Add(path, factory);
+            return appBuilder;
         }
         
-        public static void AddWebSocketHandler<T>(this IAppBuilder appBuilder, string path) 
+        public static IAppBuilder AddWebSocketHandler<T>(this IAppBuilder appBuilder, string path) 
             where T : WebSocketHandler, new()
         {
-            var httpServer = appBuilder.Properties.Get<HttpServer>(Constants.HttpServerKey);
-            if (httpServer == null)
-            {
-                Console.WriteLine($"Could not get HttpServer for attaching websocket handler, expected it with key, '{Constants.HttpServerKey}'");
-                return;
-//                throw new InvalidOperationException("Could not get HttpServer for attaching websocket handler");
-            }
-
-            httpServer.AddWebSocketService<T>(path);
+            WebSocketManager.Instance.Add(path, Activator.CreateInstance<T>);
+            return appBuilder;
         }
     }
 }

@@ -3,7 +3,7 @@ using System.IO;
 using System.Security.Cryptography.X509Certificates;
 using System.Security.Principal;
 using System.Threading;
-using WebSocketSharp.Owin.WebSocketSharp.Net;
+using SocketHttpListener.Net;
 
 namespace WebSocketSharp.Owin.RequestProcessing
 {
