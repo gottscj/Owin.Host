@@ -6,16 +6,14 @@ using SocketHttpListener.Net.WebSockets;
 
 namespace WebSocketSharp.Owin
 {
-    internal class WebSocketManager
+    public class WebSocketManager
     {
-        internal static readonly WebSocketManager Instance = new WebSocketManager();
-        
         private readonly Dictionary<string, Func<WebSocketHandler>> _handlers = new Dictionary<string, Func<WebSocketHandler>>();
-        private readonly Dictionary<int, WebSocketHandler> _sessions = new Dictionary<int, WebSocketHandler>();
+        private readonly Dictionary<string, WebSocketHandler> _sessions = new Dictionary<string, WebSocketHandler>();
         
         private readonly object _syncRoot = new object();
         
-        public void Add(string path, Func<WebSocketHandler> factory)
+        internal void Add(string path, Func<WebSocketHandler> factory)
         {
             lock (_syncRoot)
             {
@@ -23,7 +21,7 @@ namespace WebSocketSharp.Owin
             }
         }
 
-        public bool PathConfigured(string path)
+        internal bool PathConfigured(string path)
         {
             lock (_syncRoot)
             {
@@ -31,7 +29,15 @@ namespace WebSocketSharp.Owin
             }
         }
 
-        public Task ProcessMessagesAsync(string path, WebSocketContext webSocketContext)
+        public IReadOnlyList<WebSocketHandler> GetActiveSessions()
+        {
+            lock (_syncRoot)
+            {
+                return _sessions.Values.ToList();
+            }
+        }
+        
+        internal Task ProcessMessagesAsync(string path, WebSocketContext webSocketContext)
         {
             lock (_syncRoot)
             {
@@ -53,7 +59,7 @@ namespace WebSocketSharp.Owin
             }
         }
 
-        private void RemoveFromSessions(int connectionId)
+        private void RemoveFromSessions(string connectionId)
         {
             lock (_syncRoot)
             {

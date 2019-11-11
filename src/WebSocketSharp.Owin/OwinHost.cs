@@ -25,6 +25,20 @@ namespace WebSocketSharp.Owin
             server.Configure(app, new StartOptions{Urls = {url}});
             return server;
         }
+        
+        /// <summary>
+        /// Create a new OwinHttpServer instance and configure the OWIN pipeline.
+        /// </summary>
+        /// <param name="url"></param>
+        /// <param name="app">Startup function used to configure the OWIN pipeline.</param>
+        /// <returns></returns>
+        [SuppressMessage("Microsoft.Reliability", "CA2000:Dispose objects before losing scope", Justification = "Disposed by caller")]
+        public static OwinHost Start<TStartup>(string url)
+        {
+            var server = new OwinHost();
+            server.Configure<TStartup>(new StartOptions{Urls = {url}});
+            return server;
+        }
 
         /// <summary>
         /// Configures the OWIN pipeline.

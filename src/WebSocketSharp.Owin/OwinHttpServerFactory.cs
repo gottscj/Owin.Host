@@ -99,7 +99,7 @@ namespace WebSocketSharp.Owin
 			}
 			catch (Exception ex)
 			{
-				if (owinContext != null)
+				if (owinContext != null)	
 				{
 					owinContext.End(ex);
 					owinContext.Dispose();

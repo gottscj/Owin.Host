@@ -12,7 +12,7 @@ namespace SocketHttpListener
         {
             lock (this)
             {
-                ConnectionId = _idCounter;
+                ConnectionId = _idCounter.ToString();
                 _idCounter = _idCounter + 1;
                 if (_idCounter == int.MaxValue)
                 {
@@ -22,7 +22,7 @@ namespace SocketHttpListener
             
             
         }
-        public int ConnectionId { get; }
+        public string ConnectionId { get; }
 
         public WebSocketContext Context
         {
