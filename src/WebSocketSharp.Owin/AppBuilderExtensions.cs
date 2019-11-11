@@ -1,34 +1,56 @@
 using System;
 using Owin;
-using WebSocketSharp.Owin.WebSocketSharp.Server;
+using SocketHttpListener;
+using WebSocketSharp.Owin.Middleware;
 
 namespace WebSocketSharp.Owin
 {
     public static class AppBuilderExtensions
     {
-        public static void AddWebSocketHandler<T>(this IAppBuilder appBuilder, string path, Func<T> factory) 
+        public static IAppBuilder UseWebSockets(this IAppBuilder appBuilder, WebSocketManager webSocketManager)
+        {
+            AddWebSocketManager(appBuilder, webSocketManager);
+            appBuilder.Use(typeof(WebSocketSharpMiddleware), webSocketManager);
+            return appBuilder;
+        }
+        public static IAppBuilder UseWebSockets(this IAppBuilder appBuilder)
+        {
+            var webSocketManager = GetOrAddWebSocketManager(appBuilder);
+            appBuilder.Use(typeof(WebSocketSharpMiddleware), webSocketManager);
+            return appBuilder;
+        }
+        public static IAppBuilder AddWebSocketHandler<T>(this IAppBuilder appBuilder, string path, Func<T> factory) 
             where T : WebSocketHandler
         {
-            if (!appBuilder.Properties.TryGetValue("WebSocketSharp.HttpServer", out var httpServer))
-            {
-                throw new InvalidOperationException("Could not get HttpServer for attaching websocket handler");
-            }
-
-            ((HttpServer) httpServer).AddWebSocketService<T>(path, factory);
+            GetOrAddWebSocketManager(appBuilder).Add(path, factory);
+            return appBuilder;
         }
         
-        public static void AddWebSocketHandler<T>(this IAppBuilder appBuilder, string path) 
+        public static IAppBuilder AddWebSocketHandler<T>(this IAppBuilder appBuilder, string path) 
             where T : WebSocketHandler, new()
         {
-            var httpServer = appBuilder.Properties.Get<HttpServer>(Constants.HttpServerKey);
-            if (httpServer == null)
-            {
-                Console.WriteLine($"Could not get HttpServer for attaching websocket handler, expected it with key, '{Constants.HttpServerKey}'");
-                return;
-//                throw new InvalidOperationException("Could not get HttpServer for attaching websocket handler");
-            }
+            GetOrAddWebSocketManager(appBuilder).Add(path, Activator.CreateInstance<T>);
+            return appBuilder;
+        }
 
-            httpServer.AddWebSocketService<T>(path);
+        private static WebSocketManager GetOrAddWebSocketManager(IAppBuilder appBuilder)
+        {
+            const string webSocketManagerKey = nameof(WebSocketManager);
+            var webSocketManager = appBuilder.Properties.Get<WebSocketManager>(webSocketManagerKey) ??
+                                   AddWebSocketManager(appBuilder);
+
+            return webSocketManager;
+        }
+
+        private static WebSocketManager AddWebSocketManager(IAppBuilder appBuilder)
+        {
+            return AddWebSocketManager(appBuilder, new WebSocketManager());
+        }
+        private static WebSocketManager AddWebSocketManager(IAppBuilder appBuilder, WebSocketManager webSocketManager)
+        {
+            const string webSocketManagerKey = nameof(WebSocketManager);
+            appBuilder.Properties.Add(webSocketManagerKey, webSocketManager);
+            return webSocketManager;
         }
     }
 }

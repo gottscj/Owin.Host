@@ -4,10 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using SocketHttpListener.Net;
 using WebSocketSharp.Owin.RequestProcessing;
-using WebSocketSharp.Owin.WebSocketSharp;
-using WebSocketSharp.Owin.WebSocketSharp.Net;
-using WebSocketSharp.Owin.WebSocketSharp.Server;
 using LoggerFactoryFunc = System.Func<string, System.Func<System.Diagnostics.TraceEventType, int, object, System.Exception, System.Func<object, System.Exception, string>, bool>>;
 
 namespace WebSocketSharp.Owin
@@ -16,6 +14,7 @@ namespace WebSocketSharp.Owin
 	internal class OwinHttpServerFactory
 	{
 		private string _basePath;
+		private string _url = "";
 		
 		public void Initialize(IDictionary<string, object> properties)
 		{
@@ -58,10 +57,7 @@ namespace WebSocketSharp.Owin
 			_basePath = path;
 			
 			// add a server for each url
-			var url = scheme + "://" + host + port + path;
-
-			var httpServer = new HttpServer(url);
-			properties[Constants.HttpServerKey] = httpServer;
+			_url = scheme + "://" + host + port + path;
 		}
 		
 		/// <summary>
@@ -76,37 +72,38 @@ namespace WebSocketSharp.Owin
 			var loggerFactory = properties.Get<LoggerFactoryFunc>(Constants.ServerLoggerFactoryKey);
 			var logger = new OwinLogger(loggerFactory, GetType());
 
-			var httpServer = properties.Get<HttpServer>(Constants.HttpServerKey);
-			httpServer.OnRequest += (s, e) => ProcessRequest(httpServer, e.Context, app, logger);
-			httpServer.Start();
-			
-			return new Disposable(httpServer);
+			var listener = new HttpListener(logger);
+			listener.OnContext = ctx => ProcessRequest(ctx, app, logger);
+			listener.Prefixes.Add(_url);
+			listener.Start();
+			return new Disposable(listener);
 		}
 
-		private void ProcessRequest(HttpServer httpServer, HttpListenerContext context, AppFunc app, OwinLogger logger)
+		private async void ProcessRequest( HttpListenerContext context, AppFunc app, OwinLogger logger)
 		{
+			OwinHttpListenerContext owinContext = null;
 			try
 			{
 				GetPathAndQuery(context.Request, out var pathBase, out var path, out var query);
-				var owinContext = new OwinHttpListenerContext(context, pathBase, path, query);
-				owinContext.Environment.HttpServer = httpServer;
-				app.Invoke(owinContext.Environment).GetAwaiter().GetResult();
-			}
-			catch (Exception exception)
-			{
-				logger.Exception("Unexpected exception.", exception);
-				context.Response.StatusCode = 500; // internal server error
-				context.Response.ContentEncoding = Encoding.UTF8;
-				context.Response.ContentType = "application/json";
-//				e.Response.AppendHeader("Content-Type", "application/json");
-				var errorObject = new Dictionary<string, object>
+				owinContext = new OwinHttpListenerContext(context, pathBase, path, query);
+				await app.Invoke(owinContext.Environment);
+				if (!context.Connection.IsClosed)
 				{
-					["Code"] = exception.GetType().Name.Replace(nameof(Exception), ""),
-					["Message"] = exception.Message,
-					["Details"] = exception.ToString()
-				};
-				var buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(errorObject));
-				context.Response.WriteContent(buffer);
+					owinContext.Response.CompleteResponse();
+				}
+				
+				owinContext.Response.Close();
+
+				owinContext.End();
+				owinContext.Dispose();
+			}
+			catch (Exception ex)
+			{
+				if (owinContext != null)	
+				{
+					owinContext.End(ex);
+					owinContext.Dispose();
+				}
 			}
 		}
 
@@ -164,15 +161,15 @@ namespace WebSocketSharp.Owin
 
 		private class Disposable : IDisposable
 		{
-			private readonly HttpServer _httpServer;
+			private readonly HttpListener _disposable;
 
-			public Disposable(HttpServer httpServer)
+			public Disposable(HttpListener disposable)
 			{
-				_httpServer = httpServer;
+				_disposable = disposable;
 			}
 			public void Dispose()
 			{
-				_httpServer.Stop(CloseStatusCode.Normal, "Server shutting downs");
+				_disposable.Stop();
 			}
 		}
 	}

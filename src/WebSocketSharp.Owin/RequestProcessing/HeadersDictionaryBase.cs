@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
-using WebSocketSharp.Owin.WebSocketSharp;
+using SocketHttpListener;
 
 namespace WebSocketSharp.Owin.RequestProcessing
 {
