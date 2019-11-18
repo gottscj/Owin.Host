@@ -1,0 +1,197 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Collections.Specialized;
+using System.Linq;
+using Gottscj.Owin.Host.SocketHttpListener;
+
+namespace Gottscj.Owin.Host.RequestProcessing
+{
+     internal abstract class HeadersDictionaryBase : IDictionary<string, string[]>
+    {
+        protected HeadersDictionaryBase()
+        {
+        }
+
+        protected virtual NameValueCollection Headers { get; set; }
+
+        public virtual ICollection<string> Keys => Headers.AllKeys;
+
+        public virtual ICollection<string[]> Values
+        {
+            get { return Ext.ToList(this.Select(pair => pair.Value)); }
+        }
+
+        public int Count => Keys.Count();
+
+        public bool IsReadOnly => false;
+
+        public string[] this[string key]
+        {
+            get => Get(key);
+
+            set => Set(key, value);
+        }
+
+        public bool ContainsKey(string key)
+        {
+            return Keys.Contains(key, StringComparer.OrdinalIgnoreCase);
+        }
+
+        public virtual bool Remove(string key)
+        {
+            if (ContainsKey(key))
+            {
+                Headers.Remove(key);
+                return true;
+            }
+
+            return false;
+        }
+
+        protected virtual void RemoveSilent(string header)
+        {
+            Headers.Remove(header);
+        }
+
+        protected virtual string[] Get(string key)
+        {
+            if (key == null)
+            {
+                throw new ArgumentNullException(nameof(key));
+            }
+
+            string[] values;
+            if (!TryGetValue(key, out values))
+            {
+                throw new KeyNotFoundException(key);
+            }
+
+            return values;
+        }
+
+        protected void Set(string key, string[] value)
+        {
+            if (key == null)
+            {
+                throw new ArgumentNullException(nameof(key));
+            }
+
+            if (value == null || value.Length == 0)
+            {
+                RemoveSilent(key);
+            }
+            else
+            {
+                Set(key, value[0]);
+                for (int i = 1; i < value.Length; i++)
+                {
+                    Append(key, value[i]);
+                }
+            }
+        }
+
+        protected virtual void Set(string key, string value)
+        {
+            Headers[key] = value;
+        }
+
+        public void Add(string key, string[] values)
+        {
+            if (values == null)
+            {
+                throw new ArgumentNullException(nameof(values));
+            }
+
+            if (ContainsKey(key))
+            {
+                // IDictionary contract
+                throw new ArgumentException($"The key '{key}' is already present in the dictionary.");
+            }
+
+            for (int i = 0; i < values.Length; i++)
+            {
+                Append(key, values[i]);
+            }
+        }
+
+        protected virtual void Append(string key, string value)
+        {
+            Headers.Add(key, value);
+        }
+
+        public virtual bool TryGetValue(string key, out string[] value)
+        {
+            if (string.IsNullOrWhiteSpace(key))
+            {
+                value = null;
+                return false;
+            }
+
+            string[] keys = Headers.AllKeys;
+            for (int i = 0; i < keys.Length; i++)
+            {
+                if (string.Equals(key, keys[i], StringComparison.OrdinalIgnoreCase))
+                {
+                    // GetValues(string) splits the values on commas (e.g. Set-Cookie). GetValues(index) returns them unmodified.
+                    value = Headers.GetValues(key).ToArray();
+                    return true;
+                }
+            }
+
+            value = null;
+            return false;
+        }
+
+        public void Add(KeyValuePair<string, string[]> item)
+        {
+            Add(item.Key, item.Value);
+        }
+
+        public void Clear()
+        {
+            Headers.Clear();
+        }
+
+        public bool Contains(KeyValuePair<string, string[]> item)
+        {
+            string[] value;
+            return TryGetValue(item.Key, out value) && ReferenceEquals(item.Value, value);
+        }
+
+        public void CopyTo(KeyValuePair<string, string[]>[] array, int arrayIndex)
+        {
+            if (array == null)
+            {
+                throw new ArgumentNullException(nameof(array));
+            }
+            if (arrayIndex > Count - array.Length)
+            {
+                throw new ArgumentOutOfRangeException(nameof(arrayIndex), arrayIndex, string.Empty);
+            }
+
+            foreach (var item in this)
+            {
+                array[arrayIndex++] = item;
+            }
+        }
+
+        public bool Remove(KeyValuePair<string, string[]> item)
+        {
+            return Contains(item) && Remove(item.Key);
+        }
+
+        public virtual IEnumerator<KeyValuePair<string, string[]>> GetEnumerator()
+        {
+            foreach (var key in Headers.AllKeys)
+            {
+                yield return new KeyValuePair<string, string[]>(key, Headers.GetValues(key)?.ToArray() ?? new string[0]);
+            }
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+    }
+}
