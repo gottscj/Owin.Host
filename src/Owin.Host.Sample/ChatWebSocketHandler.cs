@@ -18,7 +18,7 @@ namespace WebSocketSharp.Owin.Sample
         protected override void OnTextMessage(string data)
         {
             Console.WriteLine($"'{ConnectionId}' OnTextMessage: {data}");
-            Context.WebSocket.SendAsync(data, success => Console.WriteLine("SendResult: " + success));
+            Context.WebSocket.SendAsync("ECHO from server: " + data, success => Console.WriteLine("SendResult: " + success));
         }
 
         protected override void OnBinaryMessage(byte[] data)

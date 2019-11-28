@@ -24,10 +24,11 @@ namespace WebSocketSharp.Owin.Sample
                     StaticFileOptions = {FileSystem = physicalFileSystem, ServeUnknownFileTypes = true},
                     DefaultFilesOptions = {DefaultFileNames = new[] {"index.html"}}
                 };
-                app.UseFileServer(options);
+                
                 app.UseWebApi(config);
                 app.UseWebSockets()
                     .AddWebSocketHandler<ChatWebSocketHandler>("/chat");
+                app.UseFileServer(options);
             }))
             {
                 Console.WriteLine("Press any key to exit...");

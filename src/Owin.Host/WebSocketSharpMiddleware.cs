@@ -16,7 +16,7 @@ namespace Gottscj.Owin.Host
 
         public override async Task Invoke(IOwinContext context)
         {
-            var httpListenerContext = context.Get<HttpListenerContext>(typeof(HttpListenerContext).FullName);
+            var httpListenerContext = context.Get<HttpListenerContext>(typeof(HttpListenerContext).Name);
             if (!Equals(context.Request.Headers["Upgrade"], "websocket"))
             {
                 await Next.Invoke(context);
